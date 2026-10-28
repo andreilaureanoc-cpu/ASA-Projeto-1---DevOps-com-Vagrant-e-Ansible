@@ -1,3 +1,0 @@
-.vagrant/
-playbooks/keys/*
-!playbooks/keys/*.pub
