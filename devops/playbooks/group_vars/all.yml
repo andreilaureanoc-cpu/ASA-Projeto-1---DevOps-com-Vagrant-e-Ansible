@@ -1,0 +1,17 @@
+# Integrantes (nome1 e nome2 = primeiros nomes, usados como login)
+nome1: andrei
+nome2: gabriel
+nome_completo1: andrei laureano cordeiro
+nome_completo2: gabriel palmeira
+matricula1: "20251380031"
+matricula2: "20251380016"
+# Domínio e rede
+dominio: "{{ andrei }}.{{ gabriel }}.devops"
+rede: "192.168.56.0/24"
+# Endereços dos servidores (31, 16 e 61: ver Convenções)
+ip_arq: "192.168.56.131"
+ip_db: "192.168.56.116"
+ip_app: "192.168.56.161"
+# MACs configurados no Vagrantfile (reservas DHCP)
+mac_db: "08:00:27:3a:00:01"
+mac_app: "08:00:27:3a:00:02"
