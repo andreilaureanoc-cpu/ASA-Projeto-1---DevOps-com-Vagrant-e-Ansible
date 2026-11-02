@@ -1,0 +1,51 @@
+---
+- name: Instala e configura o servidor nfs.
+  hosts: arq
+  become: true
+  
+  handlers:
+    - name: restart nfs
+      service:
+        name: nfs-kernel-server
+        state: restarted
+
+  tasks:
+    - name: Instala o servidor nfs.
+      apt:
+        name: nfs-kernel-server
+        update_cache: yes
+        state: present
+
+    - name: Cria o usuário nfs-ifpb sem shell.
+      user:
+        name: nfs-ifpb
+        shell: /usr/sbin/nologin
+        create_home: no
+        system: yes
+        state: present
+
+    - name: Obtém o uid e o gid do usuário nfs-ifpb.
+      getent:
+        database: passwd
+        key: nfs-ifpb
+
+    - name: Cria o diretório compartilhado.
+      file:
+        path: /dados/nfs
+        state: directory
+        owner: nfs-ifpb
+        group: nfs-ifpb
+        mode: 0755
+
+    - name: Copia o arquivo de exportação.
+      template:
+        src: "exports.j2"
+        dest: "/etc/exports"
+        mode: 0644
+      notify: restart nfs
+
+    - name: Habilita o serviço do nfs.
+      service:
+        name: nfs-kernel-server
+        enabled: yes
+        state: started

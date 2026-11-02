@@ -1,0 +1,40 @@
+---
+- name: Configura o LVM no servidor de arquivos.
+  hosts: arq
+  become: true
+  
+  tasks:
+    - name: Instala o lvm2.
+      apt:
+        name: lvm2
+        update_cache: yes
+        state: present
+
+    - name: Cria o volume group dados com os 3 discos.
+      community.general.lvg:
+        vg: dados
+        pvs: /dev/sdb,/dev/sdc,/dev/sdd
+
+    - name: Cria o logical volume ifpb com 15 GB.
+      community.general.lvol:
+        vg: dados
+        lv: ifpb
+        size: 15g
+
+    - name: Formata o volume com ext4.
+      filesystem:
+        fstype: ext4
+        dev: /dev/dados/ifpb
+
+    - name: Cria o ponto de montagem.
+      file:
+        path: /dados
+        state: directory
+
+    - name: Monta o volume em /dados e registra no fstab.
+      ansible.posix.mount:
+        path: /dados
+        src: /dev/dados/ifpb
+        fstype: ext4
+        opts: defaults
+        state: mounted

@@ -1,0 +1,42 @@
+---
+- name: Configura o servidor ssh e as chaves dos usuários.
+  hosts: all
+  become: true
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted
+
+  tasks:
+    - name: Instala a chave pública dos usuários da equipe.
+      authorized_key:
+        user: "{{ item }}"
+        key: "{{ lookup('file', playbook_dir + '/keys/' + item + '.pub') }}"
+        state: present
+      loop:
+        - "{{ nome1 }}"
+        - "{{ nome2 }}"  
+
+    - name: Copia a mensagem de saudação.
+      copy:
+        src: "banner.txt"
+        dest: "/etc/issue.net"
+        mode: 0644
+
+    - name: Ajusta a configuração do servidor ssh.
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        validate: "/usr/sbin/sshd -t -f %s"
+      loop:
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?KbdInteractiveAuthentication', line: 'KbdInteractiveAuthentication no' }
+        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?AllowGroups', line: 'AllowGroups vagrant ifpb' }
+        - { regexp: '^#?Banner', line: 'Banner /etc/issue.net' }
+      notify: restart ssh

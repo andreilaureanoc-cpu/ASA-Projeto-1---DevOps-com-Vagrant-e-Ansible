@@ -1,0 +1,17 @@
+---
+- name: Instala o servidor de banco de dados.
+  hosts: db
+  become: true
+
+  tasks:
+    - name: Instala o mariadb-server.
+      apt:
+        name: mariadb-server
+        update_cache: yes
+        state: present
+
+    - name: Habilita o serviço do mariadb.
+      service:
+        name: mariadb
+        enabled: yes
+        state: started

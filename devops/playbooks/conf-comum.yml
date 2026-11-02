@@ -10,6 +10,18 @@
         state: restarted
 
   tasks:
+    - name: Descobre o disco de boot.
+      shell: lsblk -no PKNAME "$(findmnt -no SOURCE /)"
+      register: disco_boot
+      changed_when: false
+
+    - name: Fixa o disco de instalação do GRUB.
+      debconf:
+        name: grub-pc
+        question: grub-pc/install_devices
+        vtype: multiselect
+        value: "/dev/{{ disco_boot.stdout }}"
+
     - name: Atualiza o sistema operacional.
       apt:
         update_cache: yes
@@ -52,8 +64,8 @@
         append: yes
         shell: /bin/bash
       loop:
-        - "Andrei" 
-        - "Gabriel"
+        - "andrei" 
+        - "gabriel"
 
     - name: Permite acesso de root via sudo ao grupo ifpb.
       copy:

@@ -1,0 +1,25 @@
+---
+- name: Instala e configura o servidor web.
+  hosts: app
+  become: true
+
+  tasks:
+    - name: Instala o apache2.
+      apt:
+        name: apache2
+        update_cache: yes
+        state: present
+
+    - name: Substitui a página default do apache.
+      template:
+        src: "index.html.j2"
+        dest: "/var/www/html/index.html"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Habilita o serviço do apache2.
+      service:
+        name: apache2
+        enabled: yes
+        state: started

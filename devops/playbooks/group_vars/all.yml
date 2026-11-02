@@ -6,7 +6,7 @@ nome_completo2: gabriel farias palmeira
 matricula1: "20251380031"
 matricula2: "20251380016"
 # Domínio e rede
-dominio: "{{ andrei }}.{{ gabriel }}.devops"
+dominio: "{{ nome1 }}.{{ nome2 }}.devops"
 rede: "192.168.56.0/24"
 # Endereços dos servidores (31, 16 e 61: ver Convenções)
 ip_arq: "192.168.56.131"

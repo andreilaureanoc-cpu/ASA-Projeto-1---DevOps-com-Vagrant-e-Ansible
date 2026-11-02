@@ -1,0 +1,39 @@
+---
+- name: Instala e configura o autofs para o compartilhamento nfs.
+  hosts: db:app:cli
+  become: true
+
+  handlers:
+    - name: restart autofs
+      service:
+        name: autofs
+        state: restarted
+
+  tasks:
+    - name: Instala o autofs e o cliente nfs.
+      apt:
+        name:
+          - autofs
+          - nfs-common
+        update_cache: yes
+        state: present
+
+    - name: Declara o mapa direto no auto.master.
+      copy:
+        content: "/- /etc/auto.nfs --timeout=60\n"
+        dest: /etc/auto.master.d/nfs.autofs
+        mode: 0644
+      notify: restart autofs
+
+    - name: Cria o mapa de montagem do compartilhamento.
+      copy:
+        content: "/var/nfs -fstype=nfs4,rw arq.{{ dominio }}:/dados/nfs\n"
+        dest: /etc/auto.nfs
+        mode: 0644
+      notify: restart autofs
+
+    - name: Habilita o serviço do autofs.
+      service:
+        name: autofs
+        enabled: yes
+        state: started

@@ -1,0 +1,3 @@
+{% set uid = getent_passwd['nfs-ifpb'][1] %}
+{% set gid = getent_passwd['nfs-ifpb'][2] %}
+/dados/nfs {{ rede }}(rw,sync,no_wdelay,all_squash,anonuid={{ uid }},anongid={{ gid }},no_subtree_check)
