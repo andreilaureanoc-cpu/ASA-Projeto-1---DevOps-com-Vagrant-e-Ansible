@@ -1,0 +1,86 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# Substitua pelos primeiros nomes da equipe e o XX pelos 2 últimos dígitos da matrícula.
+NOME1 = "andrei"
+NOME2 = "gabriel"
+
+DOMINIO = "#{NOME1}.#{NOME2}.devops"
+# Ajuste de rede dos clientes DHCP (db, app e cli): ignora o gateway da eth1
+# (para manter a saída pela eth0/NAT) e usa apenas o DNS do arq.
+AJUSTE_REDE = <<~SHELL
+  mkdir -p /etc/dhcp/dhclient-enter-hooks.d
+  cat > /etc/dhcp/dhclient-enter-hooks.d/rede-interna <<'EOF'
+  case "$interface" in
+    eth0) unset new_domain_name_servers new_domain_name new_domain_search ;;
+    eth1) unset new_routers ;;
+  esac
+  EOF
+  ifdown eth1; ifup eth1
+SHELL
+
+# Provisionamento Ansible: todas as VMs usam o mesmo site.yml (cada uma limitada a si mesma).
+def ansible_site(machine)
+  machine.vm.provision "ansible" do |ansible|
+  ansible.compatibility_mode = "2.0"
+  ansible.playbook = "playbooks/site.yml"
+  end
+end
+
+Vagrant.configure("2") do |config|
+  # General Vagrant VM configuration.
+  config.vm.box = "debian/bookworm64"
+  config.ssh.insert_key = false
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider :virtualbox do |v|
+    v.memory = 512
+    v.linked_clone = true
+    v.check_guest_additions = false
+  end
+
+  config.trigger.before :"Vagrant::Action::Builtin::WaitForCommunicator", type: :action do |t|
+    t.warn = "Interrompe o servidor dhcp do virtualbox"
+    t.run = {inline: "vboxmanage dhcpserver stop --interface vboxnet0"}
+    t.on_error = :continue
+  end
+  
+  # File server (deve ser o primeiro: ele fornece DHCP e DNS para os demais).
+  config.vm.define "arq" do |arq|
+    arq.vm.hostname = "arq.#{DOMINIO}"
+    arq.vm.network :private_network, ip: "192.168.56.131"
+    (1..3).each do |x|
+      arq.vm.disk :disk, size: "10GB", name: "disk-#{x}"
+    end
+    ansible_site(arq)
+  end
+  
+  # Database server.
+  config.vm.define "db" do |db|
+    db.vm.hostname = "db.#{DOMINIO}"
+    db.vm.network :private_network, mac: "0800273A0001", type: "dhcp"
+    db.vm.provision "rede", type: "shell", inline: AJUSTE_REDE
+    ansible_site(db)
+  end
+
+  # Application server.
+  config.vm.define "app" do |app|
+    app.vm.hostname = "app.#{DOMINIO}"
+    app.vm.network :private_network, mac: "0800273A0002", type: "dhcp"
+    app.vm.provision "rede", type: "shell", inline: AJUSTE_REDE
+    ansible_site(app)
+  end
+
+  # Host cliente.
+  config.vm.define "cli" do |cli|
+    cli.vm.hostname = "cli.#{DOMINIO}"
+    cli.vm.provider :virtualbox do |v|
+      v.memory = 1024
+    end
+    cli.vm.network :private_network, type: "dhcp"
+    cli.vm.provision "rede", type: "shell", inline: AJUSTE_REDE
+    ansible_site(cli)
+  end
+end

@@ -1,0 +1,55 @@
+---
+- name: Instala e configura servidor dns.
+  hosts: arq
+  become: true
+
+  handlers:
+    - name: restart bind
+      service:
+        name: bind9
+        state: restarted
+
+  tasks:
+    - name: Instala o servidor dns.
+      apt:
+        name:
+          - bind9
+          - bind9-dnsutils
+        update_cache: yes
+        state: present
+
+    - name: Copia o arquivo de opções do bind.
+      template:
+        src: "named.conf.options.j2"
+        dest: "/etc/bind/named.conf.options"
+        mode: 0644
+      notify: restart bind
+
+    - name: Declara as zonas direta e reversa.
+      template:
+        src: "named.conf.local.j2"
+        dest: "/etc/bind/named.conf.local"
+        mode: 0644
+      notify: restart bind
+
+    - name: Copia a zona direta.
+      template:
+        src: "zona-direta.j2"
+        dest: "/var/lib/bind/db.andrei.gabriel.devops"
+        mode: 0644
+        validate: "named-checkzone andrei.gabriel.devops %s"
+      notify: restart bind
+
+    - name: Copia a zona reversa.
+      template:
+        src: "zona-reversa.j2"
+        dest: "/var/lib/bind/db.192.168.56"
+        mode: 0644
+ #        validate: "named-checkzone 56.168.192.in-addr.arpa %s"
+      notify: restart bind
+
+    - name: Habilita o serviço do dns.
+      service:
+        name: bind9
+        enabled: yes
+        state: started

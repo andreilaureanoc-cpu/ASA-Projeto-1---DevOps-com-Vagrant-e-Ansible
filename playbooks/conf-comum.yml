@@ -1,0 +1,65 @@
+---
+- name: Configuração comum a todas as máquinas.
+  hosts: all
+  become: true
+
+  handlers:
+    - name: restart chrony
+      service:
+        name: chrony
+        state: restarted
+
+  tasks:
+    - name: Atualiza o sistema operacional.
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Instala o chrony e o cliente NFS.
+      apt:
+        name:
+          - chrony
+          - nfs-common
+        state: present
+
+    - name: Configura o chrony para usar o pool.ntp.br.
+      lineinfile:
+        dest: /etc/chrony/chrony.conf
+        regexp: "^pool "
+        line: "pool pool.ntp.br iburst"
+        state: present
+      notify: restart chrony
+
+    - name: Habilita o serviço do chrony.
+      service:
+        name: chrony
+        enabled: yes
+        state: started
+
+    - name: Ajusta a zona de tempo.
+      community.general.timezone:
+        name: America/Recife
+
+    - name: Cria o grupo ifpb.
+      group:
+        name: ifpb
+        state: present
+
+    - name: Cria os usuários da equipe.
+      user:
+        name: "{{ item }}"
+        groups: ifpb
+        append: yes
+        shell: /bin/bash
+      loop:
+        - "Andrei" 
+        - "Gabriel"
+
+    - name: Permite acesso de root via sudo ao grupo ifpb.
+      copy:
+        content: "%ifpb ALL=(ALL:ALL) NOPASSWD: ALL\n"
+        dest: /etc/sudoers.d/ifpb
+        owner: root
+        group: root
+        mode: 0440
+        validate: "visudo -cf %s"

@@ -1,0 +1,39 @@
+---
+- name: Instala e configura servidor dhcp.
+  hosts: arq
+  become: true
+
+  handlers:
+    - name: restart dhcp
+      service:
+        name: isc-dhcp-server
+        state: restarted
+
+  tasks:
+    - name: Instala o servidor dhcp.
+      apt:
+        name: isc-dhcp-server
+        update_cache: yes
+        state: present
+
+    - name: Copia o arquivo de configuração dhcp.
+      template:
+        src: "dhcpd.conf.j2"
+        dest: "/etc/dhcp/dhcpd.conf"
+        mode: 0664
+#        validate: "dhcpd -t -cf %s"
+      notify: restart dhcp
+
+    - name: Ajusta a configuração default do dhcp.
+      lineinfile:
+        dest: "/etc/default/isc-dhcp-server"
+        regexp: "^INTERFACESv4"
+        line: 'INTERFACESv4="eth1"'
+        state: present
+      notify: restart dhcp
+
+    - name: Habilita o serviço do dhcp.
+      service:
+        name: isc-dhcp-server
+        enabled: yes
+        state: started
