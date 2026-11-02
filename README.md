@@ -1,5 +1,5 @@
 # Projeto 01 - DevOps com Vagrant e Ansible
-- Integrantes: Nome 1 (matricula) e Nome 2 (matricula)
+- Integrantes: Andrei Laureano Cordeiro (20251380031) e Gabriel Farias Palmeira (20251380016)
 - Disciplina: Administração de Sistemas Abertos - IFPB Campus João Pessoa (2026.2)
 - Professor: Leonidas Lima
 ## Descrição do projeto (as 4 VMs, os serviços e a função de cada uma)
