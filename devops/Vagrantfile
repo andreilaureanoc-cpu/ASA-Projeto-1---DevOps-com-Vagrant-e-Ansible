@@ -1,6 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-# Substitua pelos primeiros nomes da equipe e o XX pelos 2 últimos dígitos da matrícula.
+# Nomes da equipe
 NOME1 = "andrei"
 NOME2 = "gabriel"
 
