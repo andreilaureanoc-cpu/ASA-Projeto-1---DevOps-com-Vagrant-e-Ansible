@@ -1,3 +1,3 @@
 .vagrant/
-**/playbooks/keys/*
-!**/playbooks/keys/*.pub
+**/devops/keys/*
+!**/devops/keys/*.pub
