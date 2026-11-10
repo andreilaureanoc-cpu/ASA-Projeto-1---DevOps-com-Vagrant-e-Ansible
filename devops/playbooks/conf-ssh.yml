@@ -13,7 +13,7 @@
     - name: Instala a chave pública dos usuários da equipe.
       authorized_key:
         user: "{{ item }}"
-        key: "{{ lookup('file', playbook_dir + '/keys/' + item + '.pub') }}"
+        key: "{{ lookup('file', playbook_dir + '/../keys/' + item + '.pub') }}"
         state: present
       loop:
         - "{{ nome1 }}"

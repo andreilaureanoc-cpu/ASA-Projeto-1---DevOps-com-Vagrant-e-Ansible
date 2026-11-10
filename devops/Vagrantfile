@@ -5,6 +5,12 @@ NOME1 = "andrei"
 NOME2 = "gabriel"
 
 DOMINIO = "#{NOME1}.#{NOME2}.devops"
+
+GERAR_CHAVES = <<~SHELL
+  [ -f keys/andrei ]  || ssh-keygen -q -t ed25519 -N "" -C "andrei@devops"  -f ./keys/andrei
+  [ -f keys/gabriel ] || ssh-keygen -q -t ed25519 -N "" -C "gabriel@devops" -f ./keys/gabriel
+SHELL
+
 # Ajuste de rede dos clientes DHCP (db, app e cli): ignora o gateway da eth1
 # (para manter a saída pela eth0/NAT) e usa apenas o DNS do arq.
 AJUSTE_REDE = <<~SHELL
@@ -27,6 +33,10 @@ def ansible_site(machine)
 end
 
 Vagrant.configure("2") do |config|
+  config.trigger.before :up do |t|
+    t.name = "Gerando chaves SSH dos usuarios"
+    t.run = {inline: "bash -c '#{GERAR_CHAVES}'"}
+  end
   # General Vagrant VM configuration.
   config.vm.box = "debian/bookworm64"
   config.ssh.insert_key = false
