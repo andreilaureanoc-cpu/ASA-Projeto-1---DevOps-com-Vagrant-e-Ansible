@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Instituição** | Instituto Federal da Paraíba (IFPB) - Campus João Pessoa |
-| **Departamento** | Departamento de Ensino Superior |
+| **Instituição** | IFPB |
+| **Curso** | Tecnologia em Redes de Computadores |
 | **Disciplina** | Administração de Sistemas Abertos |
 | **Professor** | Leonidas Lima |
 | **Período** | 2026.2 |
